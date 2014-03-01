@@ -1,0 +1,65 @@
+﻿@model IEnumerable<Temperature_Display.Models.TemperatureReading>
+
+@{
+    ViewBag.Title = "Home Page";
+}
+
+<div class="row">
+    <div class="col-md-8 col-md-push-4">
+        <h1 style="text-align:center" id="temperatureReading">@Model.First().temperature</h1>
+    </div>
+    <div class="col-md-4 col-md-pull-8">
+
+        <table id="readings" class="table">
+
+            <thead>
+                <tr>
+                    <th>From</th>
+                    <th>Date</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var reading in Model)
+                {
+                    <tr>
+                        <td>@reading.sensorName</td>
+                        <td>@reading.Date</td>
+                        <td>@reading.temperature</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+   
+
+</div>
+
+@section Scripts {
+    <script src="~/Scripts/jquery.signalR-2.0.2.js"></script>
+    <script src="~/signalr/hubs"></script>
+    <script src="~/Scripts/lib/jquery.fittext.js"></script>
+    <script src="~/Scripts/lib/accounting.js"></script>
+    <script src="~/Scripts/lib/moment.js"></script>
+    <script>
+        $(function () {
+            $("#temperatureReading").fitText();
+            var temphub = $.connection.temperatureHub;
+
+            temphub.client.addNewTemperature = function (value) {
+                console.log("added", value);
+
+                var date = moment(value.Date).format("DD MM YYYY hh:mm:ss a");
+                var temp = value.temperature.toFixed(2); // "0.61"
+                $("#readings tbody").prepend("<tr><td>" + value.sensorName + "</td><td>" + date + "</td><td>" +  temp + "</td></tr>");
+                $("#readings tr:last").remove();
+                $("#temperatureReading").text(temp);
+            };
+
+            $.connection.hub.start().done(function () {
+                console.log("Connection Started");
+            });
+    });
+
+    </script>
+}
